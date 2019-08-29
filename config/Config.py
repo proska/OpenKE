@@ -110,7 +110,16 @@ class Config(object):
 			self.trainTotal = self.lib.getTrainTotal()
 			self.testTotal = self.lib.getTestTotal()
 			self.validTotal = self.lib.getValidTotal()
-			self.batch_size = int(self.lib.getTrainTotal() / self.nbatches)
+
+			if self.batch_size is None and self.nbatches is not None:
+				self.batch_size = int(self.lib.getTrainTotal() / self.nbatches)
+			elif self.batch_size is not None and self.nbatches is None:
+				self.nbatches = int(np.ceil(self.lib.getTrainTotal() / self.batch_size))
+			else:
+				raise ValueError(f'exactly one of nbatches {self.nbatches} and '
+								 f'batch_size {self.batch_size} should be None and other have '
+								 f'value')
+
 			self.batch_seq_size = self.batch_size * (1 + self.negative_ent + self.negative_rel)
 			self.batch_h = np.zeros(self.batch_size * (1 + self.negative_ent + self.negative_rel), dtype = np.int64)
 			self.batch_t = np.zeros(self.batch_size * (1 + self.negative_ent + self.negative_rel), dtype = np.int64)
@@ -177,6 +186,9 @@ class Config(object):
 
 	def set_nbatches(self, nbatches):
 		self.nbatches = nbatches
+
+	def set_batch_size(self, batch_size):
+		self.batch_size = batch_size
 
 	def set_margin(self, margin):
 		self.margin = margin
